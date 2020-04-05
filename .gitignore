@@ -1,0 +1,17 @@
+_che__/
+
+\.pytest_cache/
+
+jupyter/\.ipynb_checkpoints/
+
+jupyter/chart\.svg
+
+*.csv_pycache__/
+
+\.pytest_cache/
+
+jupyter/\.ipynb_checkpoints/
+
+jupyter/chart\.svg
+
+*.csv
