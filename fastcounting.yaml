@@ -1,0 +1,7 @@
+# copy this file into the one specified in helper
+# path_to_config = pathlib.Path(f'{homedir}/.config/fastcounting.yaml')
+
+Redis:
+  host: localhost
+  port: 6379
+  password: Null
