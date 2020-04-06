@@ -5,3 +5,7 @@ Redis:
   host: localhost
   port: 6379
   password: Null
+
+# specify exactly one of those two
+rel_to_home_datafolder: Nextcloud/data/finance/
+absolut_datafolder: Null
