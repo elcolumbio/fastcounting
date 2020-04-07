@@ -12,3 +12,4 @@ We will work on that generalization later.
 - multi state diffs
 
 # Data Structure
+![alt picture redis data structure] (batch.png)
