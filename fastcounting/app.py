@@ -8,8 +8,6 @@ import dash_core_components as dcc
 import pandas as pd
 import redis
 
-import numpy as np
-
 from fastcounting import helper, views
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
@@ -59,7 +57,6 @@ def date_filter(start_date, end_date):
     if start_date and end_date:
         start, end = views.string_parser(start_date, end_date)
         df = views.main_datefilter(start, end)
-        df['generalID'] = df['generalID'].astype(np.int64)
         format_columns = [{"name": i, "id": i} for i in df.columns]
         print(df.head())
         return format_columns, df.to_dict('records')

@@ -1,5 +1,6 @@
 """Queries and data processing classes you can use or get inspired by."""
 import datetime as dt
+import numpy as np
 import pandas as pd
 import redis
 
@@ -58,4 +59,7 @@ def query_atomics(atomic_list):
 def main_datefilter(start_date, end_date):
     """Takes 2 timestamps as input."""
     atomic_list = query_atomic_date(start_date, end_date)
-    return query_atomics(atomic_list)
+    df = query_atomics(atomic_list)
+    df['generalID'] = df['generalID'].astype(np.int64)
+
+    return df
