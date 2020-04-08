@@ -8,6 +8,8 @@ import dash_core_components as dcc
 import pandas as pd
 import redis
 
+import numpy as np
+
 from fastcounting import helper
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
@@ -44,16 +46,13 @@ app.layout = html.Div(children=[
     dash_table.DataTable(
         id='table',
         columns=([{'id': p, 'name': p} for p in params]),
-        data=[dict({param: 0 for param in params})],
-        style_cell={'backgroundColor': 'white',
-                    'color': 'black'},
-        style_header={'backgroundColor': 'white'})
+        data=[dict({param: 0 for param in params})],)
 ])
 
 # date filter -> update table data
 @app.callback(
     [dash.dependencies.Output('table', 'columns'),
-     dash.dependencies.Output('table', 'data')],
+     dash.dependencies.Output('table', 'data'),],
     [dash.dependencies.Input('my-date-picker-range', 'start_date'),
      dash.dependencies.Input('my-date-picker-range', 'end_date')])
 def date_filter(start_date, end_date):
@@ -69,38 +68,40 @@ def date_filter(start_date, end_date):
             row.update({'Buchungsdatum': dt.fromtimestamp(atomic[1])})
             result_list.append(row)
         df = pd.DataFrame(result_list)
+        df['generalID'] = df['generalID'].astype(np.int64)
         format_columns = [{"name": i, "id": i} for i in df.columns]
         print(df.head())
-        return [format_columns, df.to_dict('records')]
+        return format_columns, df.to_dict('records')
     else:
         raise PreventUpdate
 
-
-# dark theme table 1
+# dark theme table
 @app.callback(
-    dash.dependencies.Output('table',  'style_header'),
-    [dash.dependencies.Input('toggle-theme', 'value')])
-def switch_header(dark):
-    if(dark):
-        style_header={'backgroundColor': 'black'}
-    else:
-        style_header={'backgroundColor': 'white'}
-    return style_header
-
-# dark theme table 2
-@app.callback(
+    [dash.dependencies.Output('table',  'style_header'),
     dash.dependencies.Output('table', 'style_cell'),
+    dash.dependencies.Output('table', 'style_data_conditional')],
     [dash.dependencies.Input('toggle-theme', 'value')])
-def switch_table(dark):
+def switch_bg_table(dark):
+    """To do create index like generalid which has no wholes."""
     if(dark):
         style_cell={
-            'backgroundColor': 'rgb(50, 50, 50)',
+            'backgroundColor': '#330026',
             'color': 'white'}
+        style_header={'backgroundColor': '#1a0013'}
+        style_data_conditional=[
+            {'if': {'filter_query': "{generalID} is odd"},
+            'backgroundColor': '#4d0039',
+            'color': 'white',}]
     else:
         style_cell={
             'backgroundColor': 'white',
             'color': 'black'}
-    return style_cell
+        style_header={'backgroundColor': 'white'}
+        style_data_conditional=[
+            {'if': {'filter_query': "{generalID} is odd"},
+            'backgroundColor': '#ffe6f9',
+            'color': 'black',}]
+    return [style_header, style_cell, style_data_conditional]
 
 
 if __name__ == '__main__':
