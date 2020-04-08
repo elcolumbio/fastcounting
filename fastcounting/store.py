@@ -1,9 +1,10 @@
 """Main ETL writing to our redis database."""
+import datetime as dt
 import numpy as np
 import pandas as pd
 import redis
 
-from fastcounting import helper, read_files
+from fastcounting import helper, files
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
@@ -87,7 +88,8 @@ def second_walk(df):
 
 
 def main(month):
-    df, filename = read_files.main_etl(month)
+    df, filename = files.main_etl(month)
+    print(filename)
     first_walk(df, filename)
     df['Nr.'].ffill(inplace=True) # this we have to do between first and second walk
     second_walk(df)

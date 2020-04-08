@@ -10,7 +10,7 @@ import redis
 
 import numpy as np
 
-from fastcounting import helper
+from fastcounting import helper, views
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
@@ -57,17 +57,8 @@ app.layout = html.Div(children=[
      dash.dependencies.Input('my-date-picker-range', 'end_date')])
 def date_filter(start_date, end_date):
     if start_date and end_date:
-        start_date = dt.strptime(start_date.split('T')[0], '%Y-%m-%d')
-        end_date = dt.strptime(end_date.split('T')[0], '%Y-%m-%d')
-        atomics = r.zrangebyscore(
-            'atomic:date', start_date.timestamp(),
-            end_date.timestamp(), withscores=True)
-        result_list = []
-        for atomic in atomics[:100]:
-            row = r.hgetall(f'atomicID:{atomic[0]}')
-            row.update({'Buchungsdatum': dt.fromtimestamp(atomic[1])})
-            result_list.append(row)
-        df = pd.DataFrame(result_list)
+        start, end = views.string_parser(start_date, end_date)
+        df = views.main_datefilter(start, end)
         df['generalID'] = df['generalID'].astype(np.int64)
         format_columns = [{"name": i, "id": i} for i in df.columns]
         print(df.head())

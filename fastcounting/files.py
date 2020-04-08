@@ -44,7 +44,7 @@ def main_etl(month):
     files = find_batch_files(month)
     df = read_lexware_journal(files)
     df = clean_lexware_journal(df)
-    return [df, files[0]]
+    return [df, files[0].parts[-1]]
 
 
 # Excel file like export from Lexware "Summe und Salden"
