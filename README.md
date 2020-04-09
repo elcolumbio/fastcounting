@@ -18,4 +18,4 @@ I still have to replace some german and maintain a dictionary.
 - data validation
 
 # Data Structure
-![Alt redis data structure](batch.png)
+![Alt redis data structure](store.png)
