@@ -4,7 +4,6 @@ Like csv, txt, or excel files and return pandas Dataframes.
 """
 import datetime as dt
 import pandas as pd
-import redis
 
 from fastcounting import helper
 # right now for each report we only reed one random file
@@ -47,7 +46,7 @@ def main_etl(month):
     return [df, files[0].parts[-1]]
 
 
-# Excel file like export from Lexware "Summe und Salden"
+# txt file export from Lexware "Summe und Salden"
 def read_summe(month, name='report', nrows=None):
     """Read xlxs from the default folder for each year e.g. month=2018-13 or actual month."""
     p = helper.Helper().datafolder(month)
