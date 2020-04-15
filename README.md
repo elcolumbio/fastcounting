@@ -1,8 +1,18 @@
 # fastcounting
+Fastcounting is a python module which helps you to understand your accounting data.
+Accounting Software is localized and comes with much functionality.
 
-We are in the first phase to get a local prototype running.
-Everyone has to do preprocessing of their own finance data.
-We will work on that generalization later.
+We take a step back and only implement the ground truth.
+And we make it easy for you to ask your own questions.
+
+# What is the minimum viable data and the relations of it?
+
+**Account** is a collection of related accounting entries
+
+**Accounting transaction** links two or more entries together, so the total of all entries is zero.
+
+Our naming convention for 'entries' is: atomic.
+And our naming convention for 'accounting transaction' is: general.
 
 # language barrier
 From my understanding accounting terms are in the official language for each country.
