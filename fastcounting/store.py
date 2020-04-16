@@ -39,7 +39,7 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
     # create stable mapping- general:atomic:
     r.zadd('general:atomic', {atomicID: generalID})
     # create mapping accountID:atomicID
-    r.sadd('account:atomic', {atomicID: account})
+    r.zadd('account:atomic', {atomicID: account})
     # create datefilter atomic:date
     r.zadd('atomic:date', {atomicID: date}) # could think about splitting the key into years
     # store data in hash + mapping atomic:general + mapping atomic+account
