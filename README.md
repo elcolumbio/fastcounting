@@ -14,6 +14,20 @@ And we make it easy for you to ask your own questions.
 Our naming convention for 'entries' is: atomic.
 And our naming convention for 'accounting transaction' is: general.
 
+# efficient queries
+filter dimensions:
+- date
+- account
+
+Type of queries:
+- aggregation -> we leverage lua scripts and one dimensional arrays to combine filtering and lookup in lua.
+- atomic -> we seperate and make filter easy to use and we have one lookup function: atomics in and details out
+  alternative atomic -> filter: we create temporary sets and do redis buildin joins on them.
+Most data stays in redis.
+We have easy remove and rollback logic, useful if you want to do some trial and error analysis.
+
+If we have more experience we maybe add multiple flatten views for querying and use the existing data structure as core we build on.
+
 # language barrier
 From my understanding accounting terms are in the official language for each country.
 I still have to replace some german and maintain a dictionary.
