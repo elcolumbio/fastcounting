@@ -5,6 +5,14 @@ Accounting Software is localized and comes with much functionality.
 We take a step back and only implement the ground truth.
 And we make it easy for you to ask your own questions.
 
+# dependencies
+since we just get started we depend on some latest versions.
+
+redis latest (because we are not using the deprecated hmset, its not part of redis 4.3.1)
+plotly
+pandas 1.0
+
+
 # What is the minimum viable data and the relations of it?
 
 **Account** is a collection of related accounting entries
