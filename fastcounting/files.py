@@ -1,13 +1,14 @@
 """
 The place were we read all reports.
 Like csv, txt, or excel files and return pandas Dataframes.
+This data preperation has to be done by everyone, we should define the requirements.
 """
 import datetime as dt
 import pandas as pd
+import numpy as np
 
-from fastcounting import helper
-# right now for each report we only reed one random file
-# entry points are: main_etl(month) and main_summe(month)
+from . import helper
+
 
 # our main ETL to fill our database with
 def find_batch_files(month):

@@ -19,7 +19,7 @@ def first_walk(df, batchtext):
         # create temporary mapping
         r.set(df.at[i, 'Nr.'], generalID, ex=300)
         # store data in hash
-        r.hmset(f'generalID:{generalID}',
+        r.hset(f'generalID:{generalID}',
             {'date': df.at[i, 'Belegdat.'],
             'jourdat': df.at[i, 'Jour. Dat.'],
             'buchdat': df.at[i, 'Buchdat.'],
@@ -43,9 +43,9 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
     # create datefilter atomic:date
     r.zadd('atomic:date', {atomicID: date}) # could think about splitting the key into years
     # store data in hash + mapping atomic:general + mapping atomic+account
-    r.hmset(f'atomicID:{atomicID}',
+    r.hset(f'atomicID:{atomicID}',
            {'generalID': generalID,
-            'accountID': account,
+            'accountID': int(account),
             'text': text,
             'amount': amount,
             'kontenseite': kontenseite,
