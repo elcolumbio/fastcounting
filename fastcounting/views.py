@@ -1,40 +1,104 @@
-"""Queries and data processing classes you can use or get inspired by."""
+"""Here we create the 2 essential views: account:xy and atomicview."""
 import datetime as dt
-import numpy as np
 import pandas as pd
+import numpy as np
 import redis
 
-from . import helper, files
+from fastcounting import helper, views, store, files, system
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
-
-# datefilter
-def string_parser(start, end):
-    """We use for plotly date filter."""
-    start = dt.datetime.strptime(start.split('T')[0], '%Y-%m-%d')
-    end = dt.datetime.strptime(end.split('T')[0], '%Y-%m-%d')
-    return start.timestamp(), end.timestamp()
-
-
-def query_atomic_date(start_date, end_date):
-    """Expects timestamp integers, returns list of atomicIDs, Timestamp pairs."""
-    return r.zrangebyscore('atomic:date', start_date, end_date, withscores=True)
-
-
-def query_atomics(atomic_list):
-    result_list = []
-    for atomic in atomic_list:
-        row = r.hgetall(f'atomicID:{atomic[0]}')
-        row.update({'Buchungsdatum':dt.datetime.fromtimestamp(atomic[1])})
-        result_list.append(row)
-    return pd.DataFrame(result_list)
+lua_accounts = """
+redis.setresp(3)
+local accounts = {}
+local hash = {}
+for i, value in pairs(redis.call(
+    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2], ARGV[3])) do
+    local account = value[2]['double']
+    if not hash[account] then
+        accounts[#accounts+1] = account
+        hash[account] = true
+    end
+end
+if ARGV[4] == nil then return accounts end
+"""
 
 
-def main_datefilter(start_date, end_date):
-    """Takes 2 timestamps as input."""
-    atomic_list = query_atomic_date(start_date, end_date)
-    df = query_atomics(atomic_list)
-    df['generalID'] = df['generalID'].astype(np.int64)
+lua_delete_account_views = lua_accounts + """
+for i, account in pairs(accounts) do
+    redis.call('DEL', 'account:' .. account)
+end
+return true
+"""
 
-    return df
+
+lua_account_views = """
+redis.setresp(3)
+for i, atomicID in pairs(redis.call(
+    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2])) do
+
+    local atomic = redis.call('HGETALL', 'atomicID:' .. atomicID)['map']
+    local general = redis.call('HGETALL', 'generalID:' .. atomic['generalID'])['map']
+    local account = redis.call('HGETALL', 'accountsystem:' .. atomic['accountID'])['map']
+    if next(account)==nil then
+        account = redis.call('HGETALL', 'accountsystem:special_account')['map'] end
+    
+    redis.call('XADD','account:' .. atomic['accountID'],
+        general['date'] .. '-' .. i, 
+        'general', atomic['generalID'])
+end
+"""
+
+
+def create_account_views():
+    """We create a stream for every account: e.g.: account:4400 ."""
+    response = r.eval(
+        lua_account_views, 1, 'atomic:date',
+        0, dt.datetime(2018, 1, 2).timestamp())
+    return response
+
+
+def delete_account_views():
+    """Delete all account views in one run."""
+    response = r.eval(
+        lua_delete_account_views, 1, 'account:atomic',
+        0, 9999999, 'WITHSCORES', 'dont')
+    return response
+
+
+lua_atomic_view = """
+redis.setresp(3)
+for i, atomicID in pairs(redis.call(
+    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2])) do
+    local atomic = redis.call('HGETALL', 'atomicID:' .. atomicID)['map']
+    local general = redis.call('HGETALL', 'generalID:' .. atomic['generalID'])['map']
+    local account = redis.call('HGETALL', 'accountsystem:' .. atomic['accountID'])['map']
+    if next(account)==nil then
+        account = redis.call('HGETALL', 'accountsystem:special_account')['map'] end
+    
+    redis.call('XADD','atomicview',
+        general['date'] .. '-' .. i, 
+        'general', atomic['generalID'])
+end
+return true
+"""
+
+
+def create_atomic_view():
+    """We create one stream with all atomics stacked by date."""
+    response = r.eval(
+        lua_atomic_view, 1, 'atomic:date',
+        0, dt.datetime(2018, 1, 2).timestamp())
+    return response
+
+
+def delete_atomic_view():
+    """That's easy just for completeness."""
+    return r.delete('atomicview')
+
+
+def return_all_accounts():
+    """Returns a list of all unique accounts with transactions."""
+    return r.eval(
+        lua_accounts, 1, 'account:atomic',
+        0, 9999999, 'WITHSCORES')
