@@ -24,29 +24,28 @@ r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 # sums = dict(response[middle:], zip(response[:middle]))
 
 lua_sum = """
-local accounts = {}
-local hash = {}
-for i, list in ipairs(redis.call(
-    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2], ARGV[3])) do
-if i%2==0 and not hash[list] then
-accounts[#accounts+1] = list
-hash[list] = true
-end
-end
-
+redis.setresp(3)
 local result = {}
-for idx, account in ipairs(accounts) do
-result[idx] = 0
-for i, atomic in pairs(redis.call(
-    'ZRANGEBYSCORE', KEYS[1], account, account)) do
-result[idx] = result[idx] + redis.call('HGET', 'atomicID:' .. atomic, 'amount')
-end
+local hash = {}
+for i, value in pairs(redis.call(
+    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2], ARGV[3])) do
+    local account = value[2]['double']
+    local atomic = value[1]
+    if result[account] == nil then result[account] = 0 end
+    result[account] = result[account] + redis.call('HGET', 'atomicID:' .. atomic, 'amount')
 end
 
-for i=1,#accounts do
-    result[#result+1] = accounts[i]
+local xaccounts = {}
+local xsums = {}
+for xaccount, xsum in pairs(result) do
+    xaccounts[#xaccounts+1] = xaccount
+    xsums[#xsums+1] = xsum
 end
-return result
+
+for i=1, #xsums do
+    xaccounts[#xaccounts + 1] = xsums[i]
+end
+return xaccounts
 """
 
 def sum_account(start_account, end_account):
@@ -57,7 +56,7 @@ def sum_account(start_account, end_account):
     sums = [response[:middle], response[middle:]]
     df = pd.DataFrame(sums).T
     # we prepare the dataframe for an outer join on validate
-    df.columns = ['redis_amount', 'account']
+    df.columns = ['account', 'redis_amount']
     df = df.astype({'redis_amount': np.float, 'account': np.int})
     df['redis_amount'] *= 1/100
 

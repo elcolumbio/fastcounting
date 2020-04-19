@@ -16,5 +16,5 @@ def accountsystem_toredis(filename='kontenrahmen.txt'):
     system.loc[1] = len(system.columns) * ['special_account']
     for row in system.iterrows():  # iterrow for 1000 rows is ok
         data = dict(row[1])  # shortcut we are not explicit
-        r.hset(f"accountsystem:{data['Konto-Nummer']}", data)
+        r.hset(f"accountsystem:{data['Konto-Nummer']}", mapping=data)
     return True
