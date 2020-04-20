@@ -17,7 +17,7 @@ def first_walk(df, batchtext):
         # get unique id from database (threadsave)
         generalID = r.incr('next_generalID')
         # create temporary mapping
-        r.set(df.at[i, 'Nr.'], generalID, ex=300)
+        r.set(df.at[i, 'Nr.'], generalID, ex=500)
         # store data in hash
         r.hset(f'generalID:{generalID}', mapping={
             'date': df.at[i, 'Belegdat.'],
@@ -91,4 +91,3 @@ def main(month):
     df['Nr.'].ffill(inplace=True) # this we have to do between first and second walk
     second_walk(df)
     return True
-
