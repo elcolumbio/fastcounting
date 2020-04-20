@@ -8,13 +8,13 @@ import dash_core_components as dcc
 import pandas as pd
 import redis
 
-from fastcounting import helper, views
+from fastcounting import helper, queries
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-params = ['generalID', 'accountID', 'text', 'amount',
-          'kontenseite', 'batchID', 'Buchungsdatum']
+params = ['general', 'account', 'text', 'amount',
+          'kontenseite', 'batchID', 'date']
 
 theme = {'dark': True,
          'detail': '#007439',
@@ -24,20 +24,31 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 app.layout = html.Div(children=[
-    html.Div(className='row', children=[
+    html.Div(className='row float', children=[
     dcc.DatePickerRange(
         id='my-date-picker-range',
         min_date_allowed=dt(1995, 8, 5),
         max_date_allowed=dt(2021, 9, 19),
         initial_visible_month=dt(2017, 8, 5),
         end_date=dt(2017, 8, 25).date(),
-        className='five columns'),
+        className='four columns'),
     daq.ToggleSwitch(
+        style={'float': 'left'},
         id='toggle-theme',
         color=theme['primary'],
         label=['Light', 'Dark'],
         value=True,
-        className='one columns'),
+        className='four columns'),
+    dcc.Dropdown(
+        id='my-account-dropdown',
+        style={'marginLeft': '40%'},
+        options=[
+            {'label': 'Erlöse', 'value': 4400},
+            {'label': 'Bank', 'value': 1800},
+            {'label': 'San Francisco', 'value': 'SF'}
+        ],
+        multi=True,
+        className='four columns')
     ]),
     html.Br(),
     # you cant put this inside dark themes!
@@ -47,21 +58,38 @@ app.layout = html.Div(children=[
         data=[dict({param: 0 for param in params})],)
 ])
 
-# date filter -> update table data
+
+# atomic and account view
 @app.callback(
     [dash.dependencies.Output('table', 'columns'),
      dash.dependencies.Output('table', 'data'),],
-    [dash.dependencies.Input('my-date-picker-range', 'start_date'),
+    [dash.dependencies.Input('my-account-dropdown', 'value'),
+     dash.dependencies.Input('my-date-picker-range', 'start_date'),
      dash.dependencies.Input('my-date-picker-range', 'end_date')])
-def date_filter(start_date, end_date):
-    if start_date and end_date:
-        start, end = views.string_parser(start_date, end_date)
-        df = views.main_datefilter(start, end)
+def views(accounts, start_date, end_date):
+    if accounts:
+        # at the moment we support only one account at a time
+        accounts = accounts[0]
+        print(accounts)
+        if start_date and end_date:
+            start, end = queries.string_parser(start_date, end_date)
+            streamdata = queries.query_accountview(accounts, start, end)
+        else:
+            streamdata = queries.query_accountview(accounts)
+        df = queries.stream_to_dataframe(streamdata)
         format_columns = [{"name": i, "id": i} for i in df.columns]
-        print(df.head())
         return format_columns, df.to_dict('records')
+
+    elif start_date and end_date:
+        start, end = queries.string_parser(start_date, end_date)
+        streamdata = queries.query_atomicview(start, end)
+        df = queries.stream_to_dataframe(streamdata)
+        format_columns = [{"name": i, "id": i} for i in df.columns]
+        return format_columns, df.to_dict('records')
+
     else:
         raise PreventUpdate
+
 
 # dark theme table
 @app.callback(
