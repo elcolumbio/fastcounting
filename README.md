@@ -12,6 +12,26 @@ redis latest (because we are not using the deprecated hmset, its not part of red
 plotly
 pandas 1.0
 
+# memory usage of redisdb in my local ram
+
+
+type | memory used | info
+--- | --- | ---
+csv | 2.6 MB | the file we import
+csv rows | 61 245 rows | ~ number of transactions(multi tax = 1 transaction)
+number atomic | 181 224 entries | number of atomic transactions
+accountsystem | 0.16 MB | we join for more meaningful output
+**without views** | 108 MB | core db
+atomic hashes | 181 224 | -
+general hashes | ~ 65 000 | -
+sorted sets | 4 with a length of 181 224 | -
+**with views** | 186 MB | core db and views
+same as without views | "" | ""
+atomic view | 181224 entries | big stream with fields joined
+account view | 90 with total of 181 224 entries | we distribute data over accounts
+
+
+
 
 # What is the minimum viable data and the relations of it?
 
