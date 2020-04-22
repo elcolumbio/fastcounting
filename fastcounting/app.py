@@ -8,13 +8,22 @@ import dash_core_components as dcc
 import pandas as pd
 import redis
 
-from fastcounting import helper, queries
+from fastcounting import helper, queries, views
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 params = ['general', 'account', 'text', 'amount',
           'kontenseite', 'batchID', 'date']
+
+
+def account_name_pairs():
+    view = []
+    for account in views.return_all_accounts():
+        accountsystem = r.hget(f'accountsystem:{account}', 'Kontenbezeichnung')
+        view.append({'value': account, 'label': accountsystem})
+    return view
+dropdown_options = account_name_pairs()
 
 theme = {'dark': True,
          'detail': '#007439',
@@ -42,11 +51,7 @@ app.layout = html.Div(children=[
     dcc.Dropdown(
         id='my-account-dropdown',
         style={'marginLeft': '40%'},
-        options=[
-            {'label': 'Erlöse', 'value': 4400},
-            {'label': 'Bank', 'value': 1800},
-            {'label': 'San Francisco', 'value': 'SF'}
-        ],
+        options=dropdown_options,
         multi=True,
         className='four columns')
     ]),
@@ -66,17 +71,19 @@ app.layout = html.Div(children=[
     [dash.dependencies.Input('my-account-dropdown', 'value'),
      dash.dependencies.Input('my-date-picker-range', 'start_date'),
      dash.dependencies.Input('my-date-picker-range', 'end_date')])
-def views(accounts, start_date, end_date):
+def load_udate_date(accounts, start_date, end_date):
     if accounts:
         # at the moment we support only one account at a time
         accounts = accounts[0]
-        print(accounts)
         if start_date and end_date:
             start, end = queries.string_parser(start_date, end_date)
             streamdata = queries.query_accountview(accounts, start, end)
         else:
             streamdata = queries.query_accountview(accounts)
-        df = queries.stream_to_dataframe(streamdata)
+        if streamdata:
+            df = queries.stream_to_dataframe(streamdata)
+        else:
+            df = pd.DataFrame(columns=params)
         format_columns = [{"name": i, "id": i} for i in df.columns]
         return format_columns, df.to_dict('records')
 

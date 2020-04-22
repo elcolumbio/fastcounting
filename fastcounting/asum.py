@@ -14,7 +14,6 @@ r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 lua_sum = """
 redis.setresp(3)
 local result = {}
-local hash = {}
 for i, value in pairs(redis.call(
     'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2], ARGV[3])) do
     local account = value[2]['double']
@@ -55,7 +54,9 @@ def total_diff(validate, redis_sum):
     """Check total sum which is aggregation of EB + Saldo Haben + Saldo Soll."""
     validate = validate.join(redis_sum, how='outer')
             
-    validate['checksum'] =  validate['Saldo Haben'] - validate['Saldo Soll']
+    validate['checksum'] =  validate['Saldo Soll'] - validate['Saldo Haben']
+    # if we combine soll and haben we have to respect passive accounts like this
+    validate.loc[validate.index>=2900, 'checksum'] *= (-1)
     validate = validate.round(decimals=2) # normally we dont need this since we save *100 in redis
 
     return validate[validate['checksum'] != validate['redis_amount']]

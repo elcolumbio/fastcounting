@@ -8,6 +8,7 @@ from fastcounting import helper, files
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
+
 def first_walk(df, batchtext):
     """
     First of two walks for splitted multirow transactions only the first row
@@ -28,6 +29,17 @@ def first_walk(df, batchtext):
 
         
 def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=None):
+    """Create all atomic hashes there can be up to 4 hashes for each row in our input file."""
+    # this depends on which standard accounting frame you use
+    # e.g it works in germany for skr04 but not skr03
+    # maybe you need a lookup to know if your account is active or passive
+    if account < 2900:
+        # active account increases in 'Soll'
+        amount = amount
+    else:
+        # passive account increases in 'Haben'
+        amount = (-1) * amount
+
     # get unique id from database (threadsave)
     atomicID = r.incr('next_atomicID')
     # get temporary mapping we created in the first walk
@@ -71,17 +83,18 @@ def second_walk(df):
         date = int(df.at[i, 'Belegdat.'])
         text = df.at[i, 'Buchungstext']
         nr = df.at[i, 'Nr.']
+
         if df.at[i, 'Sollkto']:
-            atomic_to_redis(i, df.at[i, 'Sollkto'], -df.at[i, 'SollEUR'], 'Soll', date, text, nr, batch)
+            atomic_to_redis(i, df.at[i, 'Sollkto'], df.at[i, 'SollEUR'], 'Soll', date, text, nr, batch)
 
         if df.at[i, 'Habenkto']:
-            atomic_to_redis(i, df.at[i, 'Habenkto'], df.at[i, 'HabenEUR'], 'Haben', date, text, nr, batch)
+            atomic_to_redis(i, df.at[i, 'Habenkto'], -df.at[i, 'HabenEUR'], 'Haben', date, text, nr, batch)
 
         if df.at[i, 'USt Kto-H']:
-            atomic_to_redis(i, df.at[i, 'USt Kto-H'], df.at[i, 'USt H-EUR'], 'Haben', date, text, nr, batch)
+            atomic_to_redis(i, df.at[i, 'USt Kto-H'], -df.at[i, 'USt H-EUR'], 'Haben', date, text, nr, batch)
 
         if df.at[i, 'USt Kto-S']:
-            atomic_to_redis(i, df.at[i, 'USt Kto-S'], -df.at[i, 'USt-S EUR'], 'Soll', date, text,nr, batch)
+            atomic_to_redis(i, df.at[i, 'USt Kto-S'], df.at[i, 'USt-S EUR'], 'Soll', date, text,nr, batch)
 
 
 def main(month):
