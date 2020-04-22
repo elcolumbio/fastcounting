@@ -62,18 +62,27 @@ We have only 3 groups for 7. Einnahmen = revenue and Abschreibungen, Betriebsaus
 Like this we matched all accounts which are part of your final reporting.
 
 # efficient queries
-filter dimensions:
+underlying dimensions of accounting:
 - date
 - account
+- relations  
+For now we focused on the first Two.
 
-Type of queries:
+Backup queries:
 - aggregation -> we leverage lua scripts and one dimensional arrays to combine filtering and lookup in lua.
 - atomic -> we seperate and make filter easy to use and we have one lookup function: atomics in and details out
-  alternative atomic -> filter: we create temporary sets and do redis buildin joins on them.
+  alternative atomic
 Most data stays in redis.
-We have easy remove and rollback logic, useful if you want to do some trial and error analysis.
 
-If we have more experience we maybe add multiple flatten views for querying and use the existing data structure as core we build on.
+View queries:
+Build on top of our Backend very easy to create and delete and to query against.
+- atomic view -> all the data you can filter by date
+- account views -> for every account -> a stream you can filter by date too
+
+Batch processing:
+We have some capabilities in our backend, but we won't implement it for now.
+We want to have easy remove and rollback logic, useful if you want to do some trial and error analysis.
+Also to get meaningful Diff Views would be very nice.
 
 # language barrier
 From my understanding accounting terms are in the official language for each country.
