@@ -45,6 +45,22 @@ account view | 90 with total of 181 224 entries | we distribute data over accoun
 Our naming convention for 'entries' is: atomic.
 And our naming convention for 'accounting transaction' is: general.
 
+# How do we handle amounts
+We transfer every number to the balance side, where this very account is increasing.
+That means you don't need to look at the balance side, you will see just by the value.
+If the account is increasing or decreasing.
+
+To do this we need to categorize all accounts with the help of our standard accounting frame.
+E.g. in Germany we have SKR04, there we have 8 main classes 0-7. Only in the 8th and last class we have mixed accounts.  
+0-1 : active accounts (incr left)  
+2-3 : passive accounts (incr right)  
+4 : revenues (incr right)  
+5-6 : expenditures (incr left)  
+7 : revenues and expenditures  
+So we need more information for 7. There is a category column in our accounting frame.
+We have only 3 groups for 7. Einnahmen = revenue and Abschreibungen, Betriebsausgaben = expenditures.
+Like this we matched all accounts which are part of your final reporting.
+
 # efficient queries
 filter dimensions:
 - date
