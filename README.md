@@ -5,12 +5,15 @@ Accounting Software is localized and comes with much functionality.
 We take a step back and only implement the ground truth.
 And we make it easy for you to ask your own questions.
 
-# dependencies
-since we just get started we depend on some latest versions.
+The basic use case right now is make queries against our views.
+Our backend store should allow us to easily introduce new functionality when needed.
 
-redis latest (because we are not using the deprecated hmset, its not part of redis 4.3.1)
+# dependencies
+redis 6 beta
+pyredis 4.3.2
+
 plotly
-pandas 1.0
+pandas
 
 # memory usage of redisdb in my local ram
 
