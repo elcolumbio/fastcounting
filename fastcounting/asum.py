@@ -3,37 +3,18 @@ Queries and data processing classes you can use or get inspired by.
 For more examples and help we have a notebook called lua_examples.
 """
 import datetime as dt
+import importlib.resources as pkg_resources
 import numpy as np
 import pandas as pd
 import redis
 
-from . import helper, files
+from fastcounting import helper, files, lua
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
-lua_sum = """
-redis.setresp(3)
-local result = {}
-for i, value in pairs(redis.call(
-    'ZRANGEBYSCORE', KEYS[1], ARGV[1], ARGV[2], ARGV[3])) do
-    local account = value[2]['double']
-    local atomic = value[1]
-    if result[account] == nil then result[account] = 0 end
-    result[account] = result[account] + redis.call('HGET', 'atomicID:' .. atomic, 'amount')
-end
+# lua scripts we import from our static lua script folder lua.
+lua_sum = pkg_resources.read_text(lua, 'sum_accounts.lua')
 
-local xaccounts = {}
-local xsums = {}
-for xaccount, xsum in pairs(result) do
-    xaccounts[#xaccounts+1] = xaccount
-    xsums[#xsums+1] = xsum
-end
-
-for i=1, #xsums do
-    xaccounts[#xaccounts + 1] = xsums[i]
-end
-return xaccounts
-"""
 
 def sum_account(start_account, end_account):
     """Example how you can use the lua_sum script."""
