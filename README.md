@@ -15,6 +15,18 @@ pyredis 4.3.2
 plotly
 pandas
 
+# Motivation
+Standard accounting software is often insufficient for data to analizing.
+E-Commerce companies typicaly have 100s or 1000s of transactions for each day.
+
+So let's export and save the data in a csv or sql.
+The data you export from your accounting software is very misplaced in a 2 dimensional table.
+The rows aren't representing atomic transactions and in accounting you have 3 main dimensions.
+Here we provide a simple and powerful logic besides tables.  
+I just made my first very simple dash app on top of our data core and our views.
+It has 2-4 times faster query speed, highly customisable and is accessible. All which my accounting Software isn't able to provide.  
+![Alt dashapp first prototype](dashapp.png)
+
 # memory usage of redisdb in my local ram
 
 
