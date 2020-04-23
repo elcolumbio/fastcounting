@@ -8,3 +8,8 @@ python:
 cache: pip
 install:
   - make install-master
+before_script:
+  - make lint
+script:
+  - make cover
+  - make wheel-lint
