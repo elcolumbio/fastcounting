@@ -30,10 +30,10 @@ def first_walk(df, batchtext):
         
 def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=None):
     """Create all atomic hashes there can be up to 4 hashes for each row in our input file."""
+    account = int(account) # account and amount (*100) should be int
     # this depends on which standard accounting frame you use
-    # e.g it works in germany for skr04 but not skr03
-    # maybe you need a lookup to know if your account is active or passive
-    if account < 2900:
+    # i wrote my own mapping function in systems
+    if int(r.hget(f'accountsystem:{account}', 'bool_incr_left')):
         # active account increases in 'Soll'
         amount = amount
     else:
@@ -57,7 +57,7 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
     # store data in hash + mapping atomic:general + mapping atomic+account
     r.hset(f'atomicID:{atomicID}', mapping={
             'generalID': generalID,
-            'accountID': int(account),
+            'accountID': account,
             'text': text,
             'amount': amount,
             'kontenseite': kontenseite,
