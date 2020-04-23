@@ -25,7 +25,7 @@ The rows aren't representing atomic transactions and in accounting you have 3 ma
 Here we provide a simple and powerful logic besides tables.  
 I just made my first very simple dash app on top of our data core and our views.
 It has 2-4 times faster query speed, highly customisable and is accessible. All which my accounting Software isn't able to provide.  
-![Alt dashapp first prototype](dashapp.png)
+![Alt dashapp first prototype](dashapp.PNG)
 
 # memory usage of redisdb in my local ram
 
