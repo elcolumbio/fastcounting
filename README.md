@@ -8,12 +8,21 @@ And we make it easy for you to ask your own questions.
 The basic use case right now is make queries against our views.
 Our backend store should allow us to easily introduce new functionality when needed.
 
-# dependencies
-redis 6 beta
-pyredis 4.3.2
+# setup
+Friendly reminder that you will have to do some preprocessing of your data.
 
-plotly
-pandas
+install redis server 6  
+start redis server 6  
+Get python environment e.g with conda:
+- conda create -n pauline
+- conda install nb_conda
+- git clone https://github.com/elcolumbio/fastcounting.git
+- cd fastcounting
+- pip install -r requirements.txt
+- pip install .
+- jupyter lab
+- select kernel pauline  
+We can use conda install -f requirements.txt the moment redis 3.4.2 is released
 
 # Motivation
 Standard accounting software is often insufficient for data to analizing.
