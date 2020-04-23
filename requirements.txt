@@ -7,3 +7,7 @@ dash_table>4.6
 jupyterlab
 
 -e git://github.com/andymccurdy/redis-py@master#egg=redis
+
+flake8
+pytest
+pytest-cov
