@@ -18,6 +18,8 @@ def stream_to_dataframe(streamdata):
     df['date'] = pd.to_datetime(df['date'], unit='s')
     df['jourdate'] = pd.to_datetime(df['jourdate'], unit='s')
     df['amount'] = df['amount']/100
+    df['date'] = df['date'].dt.date
+    df['jourdate'] = df['jourdate'].dt.date
     return df
 
 
