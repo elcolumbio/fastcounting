@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import redis
 
-from . import helper, files, views
+from fastcounting import helper, views
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 

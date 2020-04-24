@@ -2,7 +2,6 @@
 Queries and data processing classes you can use or get inspired by.
 For more examples and help we have a notebook called lua_examples.
 """
-import datetime as dt
 import importlib.resources as pkg_resources
 import numpy as np
 import pandas as pd
@@ -31,16 +30,18 @@ def sum_account(start_account, end_account):
     df.set_index('account', inplace=True)
     return df
 
+
 def total_diff(validate, redis_sum):
     """Check total sum which is aggregation of EB + Saldo Haben + Saldo Soll."""
     validate = validate.join(redis_sum, how='outer')
-            
-    validate['checksum'] =  validate['Saldo Soll'] - validate['Saldo Haben']
+
+    validate['checksum'] = validate['Saldo Soll'] - validate['Saldo Haben']
     # if we combine soll and haben we have to respect passive accounts like this
-    validate.loc[validate.index>=2900, 'checksum'] *= (-1)
-    validate = validate.round(decimals=2) # normally we dont need this since we save *100 in redis
+    validate.loc[validate.index >= 2900, 'checksum'] *= (-1)
+    validate = validate.round(decimals=2)  # normally we dont need this since we save *100 in redis
 
     return validate[validate['checksum'] != validate['redis_amount']]
+
 
 def main_total_diff(month, start_account=0, end_account=99999):
     """Connects read_summe and total diff, returns diff dataframe."""

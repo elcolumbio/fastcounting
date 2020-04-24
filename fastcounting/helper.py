@@ -13,7 +13,7 @@ class Helper():
         self.home = pathlib.Path.home()
         self.path_to_config = pathlib.Path(f'{self.home}/.config/fastcounting.yaml')
         self.configs = self.read_config()
-        
+
     def read_config(self):
         """Example config is in root in your cloned repo, named fastcounting.yaml."""
         if self.path_to_config is None:

@@ -1,7 +1,5 @@
 """Main ETL writing to our redis database."""
 import datetime as dt
-import numpy as np
-import pandas as pd
 import redis
 
 from fastcounting import helper, files
@@ -27,10 +25,10 @@ def first_walk(df, batchtext):
             'status': df.at[i, 'Status'],
             'belegnr': df.at[i, 'Belegnr.']})
 
-        
+
 def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=None):
     """Create all atomic hashes there can be up to 4 hashes for each row in our input file."""
-    account = int(account) # account and amount (*100) should be int
+    account = int(account)  # account and amount (*100) should be int
     # this depends on which standard accounting frame you use
     # i wrote my own mapping function in systems
     if int(r.hget(f'accountsystem:{account}', 'bool_incr_left')):
@@ -53,7 +51,7 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
     # create mapping accountID:atomicID
     r.zadd('account:atomic', {atomicID: account})
     # create datefilter atomic:date
-    r.zadd('atomic:date', {atomicID: date}) # could think about splitting the key into years
+    r.zadd('atomic:date', {atomicID: date})  # could think about splitting the key into years
     # store data in hash + mapping atomic:general + mapping atomic+account
     r.hset(f'atomicID:{atomicID}', mapping={
             'generalID': generalID,
@@ -62,14 +60,15 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
             'amount': amount,
             'kontenseite': kontenseite,
             'batchID': batch})
-        
+
+
 def second_walk(df):
     """
     Second and last walk, now we walk over every row and we unpack up to 4 dimensions per row.
     There are 3 types of accounting transactions in this row based lexware export.
     1. automatic transaction, like ust payment on revenues
     2. split multirow transaction, like payment of import taxes and handling with dhl.
-        important to note you can make split multirow transactions with duplicated 
+        important to note you can make split multirow transactions with duplicated
         accounts thats why we cant use a dictionary here.
     3. standard account to account mapping
     + every combination from the above
@@ -94,13 +93,13 @@ def second_walk(df):
             atomic_to_redis(i, df.at[i, 'USt Kto-H'], -df.at[i, 'USt H-EUR'], 'Haben', date, text, nr, batch)
 
         if df.at[i, 'USt Kto-S']:
-            atomic_to_redis(i, df.at[i, 'USt Kto-S'], df.at[i, 'USt-S EUR'], 'Soll', date, text,nr, batch)
+            atomic_to_redis(i, df.at[i, 'USt Kto-S'], df.at[i, 'USt-S EUR'], 'Soll', date, text, nr, batch)
 
 
 def main(month):
     df, filename = files.main_etl(month)
     print(filename)
     first_walk(df, filename)
-    df['Nr.'].ffill(inplace=True) # this we have to do between first and second walk
+    df['Nr.'].ffill(inplace=True)  # this we have to do between first and second walk
     second_walk(df)
     return True

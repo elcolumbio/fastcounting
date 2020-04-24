@@ -3,11 +3,9 @@ The place were we read all reports.
 Like csv, txt, or excel files and return pandas Dataframes.
 This data preperation has to be done by everyone, we should define the requirements.
 """
-import datetime as dt
 import pandas as pd
-import numpy as np
 
-from . import helper
+from fastcounting import helper
 
 
 # our main ETL to fill our database with
@@ -16,6 +14,7 @@ def find_batch_files(month):
     files = [file for file in p.iterdir() if file.parts[-1].lower().startswith('journal')]
     return files
 
+
 def read_lexware_journal(files, nrows=None):
     """Read xlxs from the default folder for each year e.g. month=2018-13 or actual month."""
     data = pd.read_excel(
@@ -23,9 +22,10 @@ def read_lexware_journal(files, nrows=None):
         dayfirst=True, skiprows=1, parse_dates=['Belegdat.', 'Buchdat.', 'Jour. Dat.'], nrows=nrows)
     return data
 
+
 def clean_lexware_journal(df):
     for column in ['Belegdat.', 'Buchdat.', 'Jour. Dat.']:
-        df[column] = df[column].ffill() # this works cause data is sorted
+        df[column] = df[column].ffill()  # this works cause data is sorted
         df[column] = (df[column] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
         df[column] = df[column].apply(str)
 
@@ -38,6 +38,7 @@ def clean_lexware_journal(df):
     dimensions = ['Sollkto', 'Habenkto', 'USt Kto-H', 'USt Kto-S']
     df.fillna(value={dimension: 0.0 for dimension in dimensions}, inplace=True)
     return df
+
 
 def main_etl(month):
     """All methods should run together here, pandas read is slow."""
@@ -53,13 +54,17 @@ def read_summe(month, name='report', nrows=None):
     p = helper.Helper().datafolder(month)
     files = [file for file in p.iterdir() if file.parts[-1].lower().startswith(name)]
     if files:
-        data = pd.read_table(files[0], sep='\t', engine='python', header=[0, 1], decimal=',', thousands='.', parse_dates=[2])
+        data = pd.read_table(
+            files[0], sep='\t', engine='python', header=[0, 1],
+            decimal=',', thousands='.', parse_dates=[2])
     return data
 
+
 def clean_summe(validate):
-    better_columns = ['Konto', 'Name', 'Letzte Buchung', 'EB Soll', 'EB Haben', 'Summe Soll', 'Summe Haben', 'drop1', 'drop2', 'Saldo Soll', 'Saldo Haben']
+    better_columns = ['Konto', 'Name', 'Letzte Buchung', 'EB Soll', 'EB Haben',
+                      'Summe Soll', 'Summe Haben', 'drop1', 'drop2', 'Saldo Soll', 'Saldo Haben']
     validate.columns = better_columns
-    validate.set_index('Konto', inplace = True)
+    validate.set_index('Konto', inplace=True)
     validate.fillna(0, inplace=True)  # for full year data set they are equal to sum
     validate.drop(['drop1', 'drop2'], axis=1, inplace=True)
     return validate

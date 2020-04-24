@@ -1,12 +1,9 @@
 """Here we create the 2 essential views: account:xy and atomicview."""
 import datetime as dt
 import importlib.resources as pkg_resources
-import pandas as pd
-import pathlib
-import numpy as np
 import redis
 
-from fastcounting import helper, views, store, files, system, lua
+from fastcounting import helper, lua
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
