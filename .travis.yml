@@ -9,3 +9,6 @@ cache: pip
 install:
   - pip install -r requirements.txt
   - pip install .
+
+script:
+  - flake8 .

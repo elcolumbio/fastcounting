@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import redis
 
-from . import helper, files
+from . import helper, files, views
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
@@ -46,3 +46,11 @@ def df_atomicview(start_date, end_date):
 
 def query_accountview(account, start_date=0, end_date=int(dt.datetime.today().timestamp())):
     return r.xrange(f'account:{account}', start_date, end_date)
+
+
+def account_name_pairs():
+    view = []
+    for account in views.return_all_accounts():
+        accountsystem = r.hget(f'accountsystem:{account}', 'Kontenbezeichnung')
+        view.append({'value': account, 'label': accountsystem})
+    return view

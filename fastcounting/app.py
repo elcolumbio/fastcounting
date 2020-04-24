@@ -6,24 +6,15 @@ import dash_table
 import dash_html_components as html
 import dash_core_components as dcc
 import pandas as pd
-import redis
 
-from fastcounting import helper, queries, views
-
-r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
+from fastcounting import queries
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 params = ['general', 'account', 'text', 'amount',
           'kontenseite', 'batchID', 'date']
 
 
-def account_name_pairs():
-    view = []
-    for account in views.return_all_accounts():
-        accountsystem = r.hget(f'accountsystem:{account}', 'Kontenbezeichnung')
-        view.append({'value': account, 'label': accountsystem})
-    return view
-dropdown_options = account_name_pairs()
+dropdown_options = queries.account_name_pairs()
 
 theme = {'dark': True,
          'detail': '#007439',
