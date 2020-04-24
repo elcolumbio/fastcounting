@@ -36,6 +36,9 @@ I just made my first very simple dash app on top of our data core and our views.
 It has 2-4 times faster query speed, highly customisable and is accessible. All which my accounting Software isn't able to provide.  
 ![Alt dashapp first prototype](dashapp.PNG)
 
+# Example dash app
+[github repo elcolumbio/cctable](https://github.com/elcolumbio/cctable)
+
 # memory usage of redisdb in my local ram
 
 
