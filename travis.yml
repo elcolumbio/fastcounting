@@ -7,9 +7,5 @@ python:
   - '3.8'
 cache: pip
 install:
-  - make install-master
-before_script:
-  - make lint
-script:
-  - make cover
-  - make wheel-lint
+  - pip install -r requirements.txt
+  - pip install .
