@@ -6,11 +6,13 @@ python:
 cache: pip
 
 before_install:
- - sudo rm -rf /var/lib/redis/*
- - wget https://github.com/antirez/redis/archive/6.0-rc3.tar.gz && tar xzf 6.0-rc3.tar.gz && cd redis-6.0-rc3 && make
+  - pwd
+  - sudo rm -rf /var/lib/redis/*
+  - wget https://github.com/antirez/redis/archive/6.0-rc3.tar.gz && tar xzf 6.0-rc3.tar.gz && cd redis-6.0-rc3 && make
 
 install:
-  - cd elcolumbio/fastcounting
+  - pwd
+  - cd /elcolumbio/fastcounting
   - pip install -r requirements.txt
   - pip install .
 
