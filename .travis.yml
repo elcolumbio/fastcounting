@@ -18,5 +18,6 @@ install:
 services: redis
 
 script:
-  - flake8 .
+  - flake8 ./fastcounting/
+  - flake8 ./tests
   - pytest
