@@ -11,8 +11,7 @@ before_install:
   - wget https://github.com/antirez/redis/archive/6.0-rc3.tar.gz && tar xzf 6.0-rc3.tar.gz && cd redis-6.0-rc3 && make
 
 install:
-  - pwd
-  - cd /elcolumbio/fastcounting
+  - cd /home/travis/build/elcolumbio/fastcounting/
   - pip install -r requirements.txt
   - pip install .
 
