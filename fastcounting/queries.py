@@ -32,20 +32,13 @@ def string_parser(start, end):
     return int(start.timestamp()), int(end.timestamp())
 
 
-def query_atomicview(start_date, end_date):
+def query_atomicview(start_date, end_date, count=None):
     """Expects timestamp integers, returns list of atomicIDs, Timestamp pairs."""
-    return r.xrange('atomicview', start_date, end_date)
+    return r.xrange('atomicview', start_date, end_date, count)
 
 
-def df_atomicview(start_date, end_date):
-    """Takes 2 timestamps as input."""
-    df = query_atomicview(start_date, end_date)
-    df['generalID'] = df['generalID'].astype(np.int64)
-    return df
-
-
-def query_accountview(account, start_date=0, end_date=int(dt.datetime.today().timestamp())):
-    return r.xrange(f'account:{account}', start_date, end_date)
+def query_accountview(account, start_date=0, end_date=int(dt.datetime.today().timestamp()), count=None):
+    return r.xrange(f'account:{account}', start_date, end_date, count)
 
 
 def account_name_pairs():
@@ -54,3 +47,10 @@ def account_name_pairs():
         accountsystem = r.hget(f'accountsystem:{account}', 'Kontenbezeichnung')
         view.append({'value': account, 'label': accountsystem})
     return view
+
+
+def general_context(generalid):
+    """Get all childs wich map to the same generalid."""
+    atomicids = r.zrangebyscore('general:atomic', generalid, generalid)
+    data = [r.hgetall(f'atomicID:{atomicid}') for atomicid in atomicids]
+    return data
