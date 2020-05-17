@@ -1,13 +1,17 @@
 """Main ETL writing to our redis database."""
 import datetime as dt
+import importlib.resources as pkg_resources
 import redis
 
-from fastcounting import helper, files
+from fastcounting import helper, files, lua
 
 r = redis.Redis(**helper.Helper().rediscred, decode_responses=True)
 
+# lua scripts we import from static files under the lua folder.
+general_relation = pkg_resources.read_text(lua, 'general_relation.lua')
 
-def first_walk(df, batchtext):
+
+def first_walk(df, batch):
     """
     First of two walks for splitted multirow transactions only the first row
     has general information, we run only over those here.
@@ -17,13 +21,16 @@ def first_walk(df, batchtext):
         generalID = r.incr('next_generalID')
         # create temporary mapping
         r.set(df.at[i, 'Nr.'], generalID, ex=500)
+        # create batch mapping
+        r.zadd('batch:general', {generalID: batch})
         # store data in hash
         r.hset(f'generalID:{generalID}', mapping={
             'date': df.at[i, 'Belegdat.'],
             'jourdat': df.at[i, 'Jour. Dat.'],
             'buchdat': df.at[i, 'Buchdat.'],
             'status': df.at[i, 'Status'],
-            'belegnr': df.at[i, 'Belegnr.']})
+            'belegnr': df.at[i, 'Belegnr.']
+        })
 
 
 def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=None):
@@ -43,7 +50,7 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
     # get temporary mapping we created in the first walk
     generalID = r.get(nr)
 
-    # batchfilter for diff and rollback
+    # create batch mapping
     r.zadd('batch:atomic', {atomicID: batch})
 
     # create stable mapping- general:atomic:
@@ -62,7 +69,7 @@ def atomic_to_redis(i, account, amount, kontenseite, date, text, nr, batch, ust=
             'batchID': batch})
 
 
-def second_walk(df):
+def second_walk(df, batch):
     """
     Second and last walk, now we walk over every row and we unpack up to 4 dimensions per row.
     There are 3 types of accounting transactions in this row based lexware export.
@@ -74,8 +81,6 @@ def second_walk(df):
     + every combination from the above
     It comes handy that split multirow transaction are seperated in rows.
     """
-    # this is not threadsave but writing to database is time intense. This should be fine.
-    batch = str(int(dt.datetime.today().timestamp()))
     for i in df.index:
         # date and nr are more like general fields, but text is different for split multirow.
         # for easy acces we store them in the atomic hash
@@ -96,10 +101,20 @@ def second_walk(df):
             atomic_to_redis(i, df.at[i, 'USt Kto-S'], df.at[i, 'USt-S EUR'], 'Soll', date, text, nr, batch)
 
 
+def create_relation(batch):
+    """We create feature to summarize all atomics for one generalized accounting transaction."""
+    r.eval(general_relation, 1, 'batch:general', batch, batch)
+    return True
+
+
 def main(month):
+    # This should be fine.
+    batch = str(int(dt.datetime.today().timestamp()))
     df, filename = files.main_etl(month)
     print(filename)
-    first_walk(df, filename)
+    first_walk(df, batch)
     df['Nr.'].ffill(inplace=True)  # this we have to do between first and second walk
-    second_walk(df)
-    return True
+    second_walk(df, batch)
+    # you can add your own additional features like that too
+    create_relation(batch)
+    return batch
