@@ -52,5 +52,30 @@ def account_name_pairs():
 def general_context(generalid):
     """Get all childs wich map to the same generalid."""
     atomicids = r.zrangebyscore('general:atomic', generalid, generalid)
-    data = [r.hgetall(f'atomicID:{atomicid}') for atomicid in atomicids]
+    data = [lookup(atomicid) for atomicid in atomicids]
+    return data
+
+
+def lookup(atomicid):
+    """For small amounts of atomicids you could use this slow python function."""
+    atomic_hash = r.hgetall(f'atomicID:{atomicid}')
+    general_hash = r.hgetall(f"generalID:{atomic_hash['generalID']}")
+    system_hash = r.hgetall(f"accountsystem:{atomic_hash['accountID']}")
+
+    data = {
+        'general': atomic_hash['generalID'],
+        'date': general_hash['date'],
+        'jourdate': general_hash['jourdat'],
+        'status': general_hash['status'],
+        'text': atomic_hash['text'],
+        'kontenseite': atomic_hash['kontenseite'],
+        'amount': atomic_hash['amount'],
+        'account': atomic_hash['accountID'],
+        'batchID': atomic_hash['batchID'],
+        'account_name': system_hash['Kontenbezeichnung'],
+        'system_kat': system_hash['Kontenkategorie'],
+        'system_type': system_hash['Kontenunterart'],
+        'system_tax': system_hash['Steuer'],
+        'relations': general_hash['relation']
+    }
     return data
